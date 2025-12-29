@@ -125,93 +125,82 @@ body{
 <button id="nextBtn" class="next-btn">➜</button>
 
 <script>
-/* ========= CONFIG ========= */
-const UNLOCK_TIME = new Date(2026,0,13,0,0,0);
-/* ========================= */
+const unlockTime = new Date(2026,0,13,0,0,0);
+const lock = document.getElementById("lockScreen");
+const timer = document.getElementById("timer");
+const camera = document.getElementById("cameraScreen");
+const next = document.getElementById("next");
+const slides = ["s1","s2","s3","s4"];
+let i = 0;
 
-const lockScreen = document.getElementById("lockScreen");
-const cameraScreen = document.getElementById("cameraScreen");
-const timerEl = document.getElementById("timer");
-const nextBtn = document.getElementById("nextBtn");
-const slides = ["slide1","slide2","slide3","slide4"];
-let currentSlide = 0;
-let unlocked = false;
-let timerInterval = null;
+/* FORCE LOCK SCREEN */
+lock.classList.add("active");
 
-/* Decide initial state */
-function init(){
+/* INIT */
+checkState();
+
+/* Decide state */
+function checkState(){
   const now = new Date();
-  if(now >= UNLOCK_TIME){
-    startExperience();
+  if(now >= unlockTime){
+    startCamera();
   }else{
-    lockScreen.classList.add("active");
-    startTimer();
+    updateTimer();          // 👈 render immediately
+    setInterval(updateTimer, 1000);
   }
 }
 
-/* Countdown timer only (no unlock logic loop) */
-function startTimer(){
-  timerInterval = setInterval(()=>{
-    const now = new Date();
-    const diff = UNLOCK_TIME - now;
-    if(diff <= 0){
-      clearInterval(timerInterval);
-      location.reload(); // SAFEST for iPhone
-      return;
-    }
-    const h = String(Math.floor(diff/3600000)).padStart(2,"0");
-    const m = String(Math.floor((diff%3600000)/60000)).padStart(2,"0");
-    const s = String(Math.floor((diff%60000)/1000)).padStart(2,"0");
-    timerEl.innerText = `⏳ ${h}:${m}:${s}`;
-  },1000);
+/* TIMER */
+function updateTimer(){
+  const diff = unlockTime - new Date();
+  if(diff <= 0){
+    location.reload();
+    return;
+  }
+  const h = String(Math.floor(diff/3600000)).padStart(2,"0");
+  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,"0");
+  const s = String(Math.floor((diff%60000)/1000)).padStart(2,"0");
+  timer.innerText = `⏳ ${h}:${m}:${s}`;
 }
 
-/* Start main flow */
-function startExperience(){
-  if(unlocked) return;
-  unlocked = true;
-  lockScreen.classList.remove("active");
-  cameraScreen.classList.add("active");
-  startCamera();
-}
-
-/* Camera */
+/* CAMERA */
 function startCamera(){
+  lock.classList.remove("active");
+  camera.classList.add("active");
   let c = 3;
-  const el = document.getElementById("countdown");
-  const camTimer = setInterval(()=>{
+  const countEl = document.getElementById("count");
+  const t = setInterval(()=>{
     c--;
-    if(c>0){
-      el.innerText=c;
-    }else{
-      clearInterval(camTimer);
-      cameraScreen.classList.remove("active");
+    countEl.innerText = c;
+    if(c === 0){
+      clearInterval(t);
+      camera.classList.remove("active");
       showSlide(0);
-      nextBtn.style.display="block";
+      next.style.display = "block";
     }
   },1000);
 }
 
-/* Slides */
-function showSlide(i){
+/* SLIDES */
+function showSlide(n){
   slides.forEach(id=>document.getElementById(id).classList.remove("active"));
-  document.getElementById(slides[i]).classList.add("active");
-  currentSlide = i;
+  document.getElementById(slides[n]).classList.add("active");
+  i = n;
 }
 
-nextBtn.onclick = ()=>{
-  if(currentSlide < slides.length-1){
-    showSlide(currentSlide+1);
+next.onclick = ()=>{
+  if(i < slides.length-1){
+    showSlide(i+1);
   }else{
-    nextBtn.style.display="none";
-    startHearts();
+    next.style.display="none";
+    hearts();
   }
 };
 
-/* Hearts */
-function startHearts(){
-  const heartInterval = setInterval(()=>{
-    const h=document.createElement("div");
+/* HEARTS */
+function hearts(){
+  setInterval(()=>{
+    const h = document.createElement("div");
     h.className="heart";
     h.innerText="💗";
     h.style.left=Math.random()*100+"vw";
@@ -219,10 +208,4 @@ function startHearts(){
     setTimeout(()=>h.remove(),3000);
   },180);
 }
-
-/* INIT */
-init();
 </script>
-
-</body>
-</html>
