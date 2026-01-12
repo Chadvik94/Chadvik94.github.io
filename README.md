@@ -26,17 +26,6 @@ body{
 }
 .screen.active{display:flex;}
 
-/* LOCK SCREEN */
-#lockScreen{
-  font-size:26px;
-  color:#555;
-}
-#timer{
-  margin-top:18px;
-  font-size:20px;
-  color:#d86a7a;
-}
-
 /* CAMERA */
 .camera-frame{
   border:6px solid #222;
@@ -101,15 +90,8 @@ body{
 
 <body>
 
-<!-- 🔒 LOCK -->
-<div id="lockScreen" class="screen">
-  🔒 This surprise unlocks on<br>
-  <b>13 January 2026</b>
-  <div id="timer"></div>
-</div>
-
 <!-- 📸 CAMERA -->
-<div id="cameraScreen" class="screen">
+<div id="cameraScreen" class="screen active">
   <div class="camera-frame">
     <div class="record-dot"></div>
     <div id="countdown">3</div>
@@ -125,87 +107,59 @@ body{
 <button id="nextBtn" class="next-btn">➜</button>
 
 <script>
-const unlockTime = new Date(2026,0,13,0,0,0);
-const lock = document.getElementById("lockScreen");
-const timer = document.getElementById("timer");
-const camera = document.getElementById("cameraScreen");
-const next = document.getElementById("next");
-const slides = ["s1","s2","s3","s4"];
-let i = 0;
+const slides = ["slide1","slide2","slide3","slide4"];
+let index = 0;
+const nextBtn = document.getElementById("nextBtn");
+const countdownEl = document.getElementById("countdown");
 
-/* FORCE LOCK SCREEN */
-lock.classList.add("active");
-
-/* INIT */
-checkState();
-
-/* Decide state */
-function checkState(){
-  const now = new Date();
-  if(now >= unlockTime){
-    startCamera();
+/* CAMERA COUNTDOWN (iPhone-safe) */
+let count = 3;
+function cameraCountdown(){
+  countdownEl.textContent = count;
+  if(count > 1){
+    count--;
+    setTimeout(cameraCountdown,1000);
   }else{
-    updateTimer();          // 👈 render immediately
-    setInterval(updateTimer, 1000);
-  }
-}
-
-/* TIMER */
-function updateTimer(){
-  const diff = unlockTime - new Date();
-  if(diff <= 0){
-    location.reload();
-    return;
-  }
-  const h = String(Math.floor(diff/3600000)).padStart(2,"0");
-  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,"0");
-  const s = String(Math.floor((diff%60000)/1000)).padStart(2,"0");
-  timer.innerText = `⏳ ${h}:${m}:${s}`;
-}
-
-/* CAMERA */
-function startCamera(){
-  lock.classList.remove("active");
-  camera.classList.add("active");
-  let c = 3;
-  const countEl = document.getElementById("count");
-  const t = setInterval(()=>{
-    c--;
-    countEl.innerText = c;
-    if(c === 0){
-      clearInterval(t);
-      camera.classList.remove("active");
+    setTimeout(()=>{
+      document.getElementById("cameraScreen").classList.remove("active");
       showSlide(0);
-      next.style.display = "block";
-    }
-  },1000);
+      nextBtn.style.display = "block";
+    },1000);
+  }
 }
+cameraCountdown();
 
-/* SLIDES */
+/* SHOW SLIDE */
 function showSlide(n){
-  slides.forEach(id=>document.getElementById(id).classList.remove("active"));
+  slides.forEach(id=>{
+    document.getElementById(id).classList.remove("active");
+  });
   document.getElementById(slides[n]).classList.add("active");
-  i = n;
+  index = n;
 }
 
-next.onclick = ()=>{
-  if(i < slides.length-1){
-    showSlide(i+1);
+/* NEXT BUTTON */
+nextBtn.onclick = ()=>{
+  if(index < slides.length - 1){
+    showSlide(index + 1);
   }else{
-    next.style.display="none";
-    hearts();
+    nextBtn.style.display = "none";
+    startHearts();
   }
 };
 
-/* HEARTS */
-function hearts(){
+/* HEART RAIN */
+function startHearts(){
   setInterval(()=>{
     const h = document.createElement("div");
-    h.className="heart";
-    h.innerText="💗";
-    h.style.left=Math.random()*100+"vw";
+    h.className = "heart";
+    h.textContent = "💗";
+    h.style.left = Math.random()*100 + "vw";
     document.body.appendChild(h);
     setTimeout(()=>h.remove(),3000);
-  },180);
+  },150);
 }
 </script>
+
+</body>
+</html>
